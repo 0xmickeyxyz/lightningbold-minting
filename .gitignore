@@ -1,0 +1,10 @@
+node_modules
+*.log
+.env
+backend/data/*
+!.gitkeep
+.vercel
+dist
+build
+*.sqlite
+*.db*

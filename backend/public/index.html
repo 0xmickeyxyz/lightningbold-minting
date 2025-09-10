@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Lightning Bold • Mint</title>
+  <link rel="icon" href="/logo.png">
+  <style>
+    :root { --bg:#050505; --card:#111; --accent:#7c5cff; --accent2:#ff3366; --text:#f2f2f2; --muted:#8b8b8b; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
+    .topbar { display:flex; justify-content:center; align-items:center; padding:14px 18px; border-bottom:1px solid #1a1a1a; background:#0b0b0b; position:sticky; top:0; z-index:10; }
+    .brand { display:flex; gap:10px; align-items:center; }
+    .brand img { width:34px; height:34px; border-radius:50%; background:#222; }
+    .brand b { font-size:1.1rem; letter-spacing:1px; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .wrap { min-height:calc(100vh - 60px); display:flex; justify-content:center; align-items:center; padding:28px; background:radial-gradient(1200px 500px at 50% -200px, rgba(124,92,255,.25), transparent 70%); }
+    .card { background:var(--card); border:1px solid #2a2a2a; border-radius:20px; max-width:460px; width:100%; padding:28px; box-shadow:0 0 25px rgba(124,92,255,.25); }
+    h2 { margin:0 0 8px; text-align:center; font-size:1.6rem; }
+    .muted { color:var(--muted); text-align:center; }
+    .field { display:flex; flex-direction:column; gap:6px; margin-top:16px; }
+    label { font-size:.9rem; }
+    input { background:#0d0d0d; border:1px solid #2a2a2a; border-radius:10px; padding:12px; color:var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+    .chip { background:#1a1a1a; border:1px solid #333; border-radius:10px; padding:10px 14px; cursor:pointer; transition:.2s; }
+    .chip:hover { border-color:var(--accent); color:var(--accent); }
+    .chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btn { padding:12px 18px; border-radius:10px; border:none; cursor:pointer; font-weight:700; background:linear-gradient(90deg,var(--accent),var(--accent2)); color:#fff; transition:.25s; }
+    .btn:hover { filter:brightness(1.1); }
+    .btn-ghost { background:#111; border:1px solid #333; color:#fff; cursor:pointer; border-radius:10px; padding:12px 18px; font-weight:600; }
+    .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+    .error { color:#ff7a7a; min-height:1.2em; text-align:center; margin-top:8px; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; padding:16px; }
+    .modal { background:#111; border:1px solid #2a2a2a; border-radius:16px; max-width:420px; width:100%; padding:24px; text-align:center; box-shadow:0 0 30px rgba(124,92,255,.35); }
+    .pill { display:inline-block; padding:10px 12px; margin-top:10px; border-radius:10px; background:#0e0e0e; border:1px solid #333; font-family: monospace; word-break:break-all; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">
+      <img src="/logo.png" alt="Lightning Bold"/>
+      <b>Lightning Bold</b>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Mint Lightning Bold</h2>
+      <p class="muted" id="price">Loading...</p>
+
+      <div class="field">
+        <label for="wallet">Destination address (sp1…)</label>
+        <input id="wallet" placeholder="sprt1... or sp1..." autocomplete="off" spellcheck="false"/>
+      </div>
+
+      <div class="field">
+        <label>Select amount</label>
+        <div class="row" id="chips">
+          <span class="chip active" data-x="1">×1</span>
+          <span class="chip" data-x="2">×2</span>
+          <span class="chip" data-x="5">×5</span>
+          <span class="chip" data-x="10">×10</span>
+        </div>
+      </div>
+
+      <div class="field" style="text-align:center;">
+        <div>Cost: <b id="cost">—</b> sats</div>
+        <div id="outTokens" class="muted">You receive: —</div>
+      </div>
+
+      <div class="row">
+        <button id="showFee" class="btn-ghost">Send</button>
+      </div>
+      <div class="error" id="err"></div>
+    </div>
+  </div>
+
+  <!-- Modal fee -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal">
+      <h3>Send the mint fee</h3>
+      <p class="muted">SEND TO HERE</p>
+      <div id="feeAddr" class="pill">loading…</div>
+      <div style="margin-top:8px" class="muted">
+        Target amount: <b id="targetAmt">—</b> sats
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="copyBtn" class="btn-ghost">Copy</button>
+        <a id="explLink" target="_blank" class="btn-ghost">View in Explorer</a>
+        <button id="mintBtnModal" class="btn">I have paid</button>
+        <button id="closeBtn" class="btn-ghost">Close</button>
+      </div>
+      <div id="modalErr" class="error"></div>
+    </div>
+  </div>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>
