@@ -5,13 +5,8 @@
     { "src": "backend/public/**", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "^/(config|health)$", "dest": "backend/server.mjs" },
-    { "src": "^/api/.*", "dest": "backend/server.mjs" },
-    { "src": "^/$", "dest": "backend/public/index.html" },
-    { "src": "^(.*)$", "dest": "backend/public$1" }
-  ],
-  "crons": [
-    { "path": "/api/scan", "schedule": "*/2 * * * *" },
-    { "path": "/api/match", "schedule": "*/2 * * * *" }
+    { "src": "/api/(.*)", "dest": "backend/server.mjs" },
+    { "src": "/", "dest": "backend/public/index.html" },
+    { "src": "/(.*)", "dest": "backend/public/$1" }
   ]
 }
