@@ -9,8 +9,6 @@
   const errEl = $('#err');
 
   const showFeeBtn = $('#showFee');
-  const mintBtn = $('#mintBtn');           // may be null (we removed the outer button)
-  const mintBtnModal = $('#mintBtnModal'); // the button inside modal
 
   const overlay = $('#overlay');
   const feeAddrEl = $('#feeAddr');
@@ -19,25 +17,39 @@
   const copyBtn = $('#copyBtn');
   const closeBtn = $('#closeBtn');
   const modalErr = $('#modalErr');
+  const modalPaidBtn = $('#modalPaidBtn');
 
   let mintFeeSats = 0;
   let feeAddress = '';
   let tokenName = 'Lightning Bold';
+  let tokenSymbol = 'BOLD';
+  let tokensPerMint = 1000;
+  let tokenDecimals = 8;
   let maxPerWallet = 10;
+  let viewerBase = 'https://www.sparkscan.io';
   let count = 1;
 
   try {
-    const r = await fetch('/api/config');
+    const r = await fetch('/api/config', { headers: { accept: 'application/json' } });
     if (r.ok) {
       const cfg = await r.json();
-      mintFeeSats = Number(cfg.feeSats);
-      feeAddress = String(cfg.feeAddress);
-      tokenName = 'Lightning Bold';
-      maxPerWallet = Number(cfg.maxMintsPerWallet || 10);
-      const viewerBase = String(cfg.explorerBase || 'https://www.sparkscan.io');
-      explLink.href = `${viewerBase}${viewerBase.includes('?') ? '&' : '?'}address=${encodeURIComponent(feeAddress)}`;
+      mintFeeSats   = Number(cfg.feeSats ?? 0);
+      feeAddress    = String(cfg.feeAddress ?? '');
+      tokenName     = String(cfg.tokenName ?? 'Lightning Bold');
+      tokenSymbol   = String(cfg.tokenSymbol ?? 'BOLD');
+      tokensPerMint = Number(cfg.tokensPerMint ?? 1000);
+      tokenDecimals = Number(cfg.tokenDecimals ?? 8);
+      maxPerWallet  = Number(cfg.maxMintsPerWallet ?? 10);
+      viewerBase    = String(cfg.explorerBase ?? 'https://www.sparkscan.io');
+
+      const link = viewerBase.includes('/address/')
+        ? `${viewerBase}`
+        : `${viewerBase.replace(/\/$/, '')}/address/${encodeURIComponent(feeAddress)}`;
+      explLink.href = link;
     }
-  } catch {}
+  } catch (e) {
+    console.warn('Config fetch failed', e);
+  }
 
   function renderPrice() {
     if (mintFeeSats > 0) {
@@ -46,14 +58,13 @@
       priceEl.textContent = `Loading price…`;
     }
   }
-  renderPrice();
-
   function renderCost() {
-    const total = count * (mintFeeSats || 0);
-    costEl.textContent = mintFeeSats ? total : '—';
-    outTokensEl.textContent = `You receive: ${count} ${tokenName}`;
+    const totalSats = count * (mintFeeSats || 0);
+    costEl.textContent = mintFeeSats ? String(totalSats) : '—';
+    const totalTokens = count * tokensPerMint;
+    outTokensEl.textContent = `You receive: ${totalTokens.toLocaleString()} ${tokenName} ($${tokenSymbol})`;
   }
-  renderCost();
+  renderPrice(); renderCost();
 
   chipsEl.addEventListener('click', (ev) => {
     const n = ev.target?.dataset?.x;
@@ -68,7 +79,9 @@
 
   showFeeBtn.addEventListener('click', () => {
     errEl.textContent = '';
+    errEl.style.color = '';
     modalErr.textContent = '';
+
     if (!feeAddress) {
       modalErr.textContent = 'Fee address not available.';
       overlay.style.display = 'flex';
@@ -92,42 +105,36 @@
     overlay.style.display = 'none';
   });
 
-  async function submitPaid() {
+  modalPaidBtn?.addEventListener('click', async () => {
     modalErr.textContent = '';
     errEl.textContent = '';
+    errEl.style.color = '';
+
     const wallet = walletEl.value.trim();
-    if (!wallet) { modalErr.textContent = 'Destination wallet required.'; return; }
+    if (!wallet) { modalErr.textContent = 'Destination wallet is required.'; return; }
+    if (![1,2,5,10].includes(count)) { modalErr.textContent = 'Select amount first.'; return; }
 
-    const payload = { wallet, qty: count, amount_sats: count * (mintFeeSats || 0) };
     try {
-      if (mintBtn) { mintBtn.disabled = true; mintBtn.textContent = 'Processing…'; }
-      if (mintBtnModal) { mintBtnModal.disabled = true; mintBtnModal.textContent = 'Processing…'; }
-
-      const r = await fetch('/api/paid', {
+      modalPaidBtn.disabled = true;
+      modalPaidBtn.textContent = 'Processing...';
+      const r = await fetch('/api/i-paid', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ wallet, qty: count, amount_sats: count * (mintFeeSats || 0) })
       });
       const j = await r.json();
-      if (j.ok) {
-        modalErr.style.color = '#9ee39e';
-        modalErr.textContent = 'Saved. We recorded your payment intent.';
+      if (j?.ok && j.status === 'RECORDED') {
         errEl.style.color = '#9ee39e';
-        errEl.textContent = 'Saved to notepad.';
+        errEl.textContent = 'Saved. We recorded your payment intent.';
+        overlay.style.display = 'none';
       } else {
-        modalErr.style.color = '#ff8a8a';
-        modalErr.textContent = j.error || 'Server error.';
+        modalErr.textContent = j?.message || 'Server error.';
       }
     } catch {
-      modalErr.style.color = '#ff8a8a';
       modalErr.textContent = 'Network/Server error.';
     } finally {
-      if (mintBtn) { mintBtn.disabled = false; mintBtn.textContent = 'I have paid'; }
-      if (mintBtnModal) { mintBtnModal.disabled = false; mintBtnModal.textContent = 'I have paid'; }
+      modalPaidBtn.disabled = false;
+      modalPaidBtn.textContent = 'I have paid';
     }
-  }
-
-  // register listeners only if elements exist
-  if (mintBtn) mintBtn.addEventListener('click', submitPaid);
-  if (mintBtnModal) mintBtnModal.addEventListener('click', submitPaid);
+  });
 })();
