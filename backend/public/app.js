@@ -29,6 +29,7 @@
   let viewerBase = 'https://www.sparkscan.io';
   let count = 1;
 
+  // fetch config
   try {
     const r = await fetch('/api/config', { headers: { accept: 'application/json' } });
     if (r.ok) {
@@ -101,9 +102,7 @@
     } catch {}
   });
 
-  closeBtn.addEventListener('click', () => {
-    overlay.style.display = 'none';
-  });
+  closeBtn.addEventListener('click', () => { overlay.style.display = 'none'; });
 
   modalPaidBtn?.addEventListener('click', async () => {
     modalErr.textContent = '';

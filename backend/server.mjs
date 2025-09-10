@@ -6,7 +6,6 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-/* ===== ENV ===== */
 const PORT = Number(process.env.PORT || 3000)
 const ORIGIN = process.env.ALLOWED_ORIGIN || '*'
 const NETWORK = (process.env.NETWORK || 'MAINNET').toLowerCase()
@@ -20,17 +19,13 @@ const TOKEN_DECIMALS = Number(process.env.TOKEN_DECIMALS || 8)
 const MINT_TOKENS = Number(process.env.MINT_TOKENS || 1000)
 const MAX_MINTS_PER_WALLET = Number(process.env.MAX_MINTS_PER_WALLET || 10)
 
-/* ===== APP ===== */
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 app.use(helmet())
 app.use(cors({ origin: ORIGIN === '*' ? true : ORIGIN }))
 app.use(express.json())
-
-// Serve static locally (Vercel will serve via vercel.json)
 app.use(express.static(path.join(__dirname, 'public')))
 
-/* ===== Notepad CSV ===== */
 const isVercel = process.env.VERCEL === '1'
 const DATA_DIR = isVercel ? '/tmp' : path.join(__dirname, 'data')
 const CSV_PATH = path.join(DATA_DIR, 'paid.csv')
@@ -40,7 +35,6 @@ function ensureCsv() {
 }
 ensureCsv()
 
-/* ===== CONFIG ===== */
 app.get('/api/config', (_req, res) => {
   res.json({
     network: NETWORK,
@@ -54,7 +48,6 @@ app.get('/api/config', (_req, res) => {
   })
 })
 
-/* ===== Notepad endpoints ===== */
 app.post('/api/i-paid', (req, res) => {
   try {
     const wallet = String(req.body.wallet || '').trim()
@@ -90,10 +83,8 @@ app.get('/api/paid.json', (_req,res) => {
   } catch { res.status(500).json({ ok:false }) }
 })
 
-/* ===== Health ===== */
 app.get('/health', (_req,res) => res.json({ ok:true }))
 
-/* ===== Start (local only) ===== */
 if (!isVercel) {
   app.listen(PORT, () => {
     console.log(`Local :${PORT} • fee=${FEE_ADDRESS} • network=${NETWORK} • csv=${CSV_PATH}`)
